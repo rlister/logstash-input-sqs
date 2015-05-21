@@ -88,7 +88,9 @@ class LogStash::Inputs::SQS < LogStash::Inputs::Threadable
     @logger.info("Registering SQS input", :queue => @queue)
     require "aws-sdk"
 
-    @sqs = AWS::SQS.new(aws_options_hash)
+    ## hacky workaround for AWS::SQS::Errors::ChecksumError, see https://github.com/logstash-plugins/logstash-input-sqs/issues/9
+    verify_checksums = ENV['SQS_SKIP_CHECKSUMS'] ? false : true
+    @sqs = AWS::SQS.new(aws_options_hash.merge(:sqs_verify_checksums => verify_checksums))
 
     begin
       @logger.debug("Connecting to AWS SQS queue", :queue => @queue)
